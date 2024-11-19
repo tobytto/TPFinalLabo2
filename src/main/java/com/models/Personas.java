@@ -1,15 +1,27 @@
 package com.models;
 
+import com.enums.TipoPersona;
+import com.models.funciones.Mensajes;
+
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Scanner;
 
 public class Personas {
-    ArrayList<Persona> personas;
+    private ArrayList<Persona> personas;
+
+    public Personas(ArrayList<Persona> personas) {
+        this.personas = personas;
+    }
 
     public Personas() {
         this.personas = new ArrayList<>();
+    }
+
+    public ArrayList<Persona> getPersonas() {
+        return personas;
     }
 
     public void addPersona(Persona p){
@@ -22,6 +34,10 @@ public class Personas {
         }
     }
 
+    public Persona buscarPersonaPorIndex(int index){
+        return this.personas.get(index);
+    }
+
     public Persona buscarPersona(String nombre) {
         for (Persona p : personas) {
             if (Objects.equals(p.getNombre(), nombre)) {
@@ -31,13 +47,24 @@ public class Personas {
         return null;
     }
 
-    public Persona buscarPersona(int index){
+    public Persona buscarPersona(int id){
         for (Persona p: personas){
-            if(Objects.equals(p.getId(),index)){
+            if(p.getId() == id){
                 return p;
             }
         }
         return null;
+    }
+
+    public int buscarIndexConIdPersona(int id){
+        int contador =-1;
+        for (Persona p: personas){
+            contador++;
+            if(p.getId() == id){
+                return contador;
+            }
+        }
+        return contador;
     }
 
     public void eliminarPorNombre(String nombre){
@@ -53,25 +80,50 @@ public class Personas {
     }
 
     public Persona buscarPorDNI(String dni){
+        int respuesta=1;
         for(Persona p: personas){
-            if(Objects.equals(p.getDni(),dni)){
-                return p;
+            if(p.getDni().equals(dni)){
+                if(p.getTipoPersona() == TipoPersona.CLIENTE){
+                    respuesta = ((Cliente) p).mostrarCliente();
+                    }
+                else { respuesta = ((Proveedor) p).mostrarProveedor();} // muestra y confirma si es la persona
+
+                if (respuesta == 0) { return p;}
             }
         }
         return null;
+    }
+
+
+    public int buscarIndexPorDNI(String dni){
+        int contador = 0;
+        for(Persona p: personas){
+            if(p.getDni().equals(dni)){
+                contador++;
+                int respuesta = p.mostrarPersona(); // muestra y confirma si es la persona
+                if (respuesta == 0) { return contador;}
+            }
+        }
+        return -1;
     }
 
     public void ordenarPorNombre(){
         Collections.sort(personas);
     }
 
-    public void darBajaPersona(String dni){
-        for(Persona p: personas){
-            if(Objects.equals(p.getDni(),dni)){
+
+
+    public void darBajaPersona(int index) {
+        if (index != -1) {
+                Persona p = this.personas.get(index);
                 p.setActive(false);
+                this.personas.set(index,p);
             }
-        }
+            else{
+                JOptionPane.showMessageDialog(null, "Error no existe esa Persona");
+            }
     }
+
 
     public void mostrarPersonasActivas(){
         for(Persona p: personas){
@@ -81,7 +133,22 @@ public class Personas {
         }
     }
 
+    public int personasIndexOf(Persona p){
+        return this.personas.indexOf(p);
+    }
 
+    public void setPersonas(int index, Persona p){
+        this.personas.set(index,p);
+    }
 
+    public Persona buscarPersonaConMensajito(){
+        String DNIgenerico = Mensajes.mensajeReturnString("Ingrese el DNI de la persona a buscar:");
+        int index = this.buscarIndexPorDNI(DNIgenerico);
+        if( index == -1 )
+        {
+            Mensajes.mensajeOut("No existe esa Persona");
+        }
+    return this.buscarPersonaPorIndex(index);
+    }
 
 }

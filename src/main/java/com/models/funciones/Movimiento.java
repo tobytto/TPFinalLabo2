@@ -1,8 +1,10 @@
 package com.models.funciones;
 
 import com.models.Cuenta;
-import com.models.Pedidos;
+import com.models.Pedido;
 import com.enums.TipoDeMovimiento;
+import com.models.PedidoLinea;
+import com.models.Producto;
 
 import java.time.LocalDate;
 
@@ -10,12 +12,13 @@ public class Movimiento {
     private static int idContador=0;
     private int id;
     private LocalDate fecha;
-    private Cuenta cuenta;
-    private Pedidos productosComercializados;
+    private Cuenta cuenta = new Cuenta();
+    private Pedido productosComercializados;
     private Double montoTotal;
     private Double saldoAnterior;
     private Double saldoModificado;
     private String descripcion;
+
 
 
 
@@ -24,7 +27,7 @@ public class Movimiento {
 
     public Movimiento(TipoDeMovimiento tipoDeMovimiento, // compra o venta
                       Cuenta cuenta, // la cuenta donde tiene que impacatar
-                      Pedidos productosComercializados, // el pedido
+                      Pedido productosComercializados, // el pedido
                       String descripcion,
                       LocalDate fecha) {
         this.id = idContador;
@@ -34,9 +37,13 @@ public class Movimiento {
         this.productosComercializados = productosComercializados;
         this.montoTotal = productosComercializados.getMontoTotal();
         this.saldoAnterior = cuenta.getSaldo();
-        this.cuenta.setSaldo(this.saldoAnterior+ this.montoTotal);
-        this.saldoModificado = cuenta.getSaldo();
+        this.saldoModificado = cuenta.getSaldo() + this.montoTotal;
+        cuenta.setSaldo(this.saldoModificado);
         this.cuenta = cuenta;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public int getId() {
@@ -59,11 +66,11 @@ public class Movimiento {
         this.cuenta = cuenta;
     }
 
-    public Pedidos getProductosComercializados() {
+    public Pedido getProductosComercializados() {
         return productosComercializados;
     }
 
-    public void setProductosComercializados(Pedidos productosComercializados) {
+    public void setProductosComercializados(Pedido productosComercializados) {
         this.productosComercializados = productosComercializados;
     }
 
@@ -98,6 +105,35 @@ public class Movimiento {
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
     }
+
+    public int mostrarMovimiento(){
+        return Mensajes.mensajeYesNO(this.descripcion);
+    }
+
+    public Movimiento invertirMovimiento() {
+        Pedido pedido = this.getProductosComercializados();
+        pedido.invertirPedidos();
+        this.setDescripcion("Anulacion, pedido: "+pedido.getId());
+        this.setProductosComercializados(pedido);
+        return this;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        Movimiento movObje = (Movimiento) obj;
+        if (movObje.getId()==this.getId()) { return true;}
+        return false;
+    }
+
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + " [id=" + id + ", fecha=" + fecha + ", cuenta=" + cuenta
+                + ", productosComercializados=" + productosComercializados
+                + ", montoTotal=" + montoTotal + ", saldoAnterior=" + saldoAnterior
+                + ", saldoModificado=" + saldoModificado + ", descripcion=" + descripcion + "]";
+    }
+
 }
 
 
