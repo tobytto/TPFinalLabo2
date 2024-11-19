@@ -1,6 +1,8 @@
 package com.models;
 import com.enums.TipoCuenta;
 
+import java.util.ArrayList;
+
 
 public class Cuenta {
     private static int idContador=0;
@@ -18,6 +20,7 @@ public class Cuenta {
         this.idPersona = persona.getId();
         this.tipoCuenta = tipo;
         this.saldo=0.0;
+        this.activa = true;
     }
 
     public Cuenta() {
@@ -77,5 +80,19 @@ public class Cuenta {
         return this;
     }
 
+    public static ArrayList<Cuenta> cargarCuentasNuevaPersona(Persona p){
+        ArrayList<Cuenta> cuentas = new ArrayList<>();
+        for (TipoCuenta tipoCuenta : TipoCuenta.values()) {
+            cuentas.add(new Cuenta(p, tipoCuenta));
+        }
+        return cuentas;
+    }
+
+
+    @Override
+    public String toString() {
+        return "Cuenta [id=" + id + ", idPersona=" + idPersona + ", saldo=" + saldo +
+                ", tipoCuenta=" + tipoCuenta + ", activa=" + activa + "]";
+    }
 
 }

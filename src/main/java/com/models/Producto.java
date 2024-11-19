@@ -1,9 +1,17 @@
 package com.models;
 import com.enums.CatProducto;
 import java.util.Objects;
+import java.util.Scanner;
+
+import com.models.funciones.Mensajes;
 import com.validaciones.Validaciones;
 
-public abstract class Producto implements Comparable<Producto> {
+import javax.swing.*;
+
+// la estoy haciendo concreta
+//public abstract class Producto implements Comparable<Producto> {
+public class Producto implements Comparable<com.models.Producto> {
+
     private int idProd;
     private static int contador=0;
     private String nombreProd;
@@ -12,10 +20,41 @@ public abstract class Producto implements Comparable<Producto> {
     private int Stock;
     private double precioDeCompra;
     private double precioDeVenta;
-    private String FechaVen;
+    private String FechaVen; // esto deberia ser un PAR List<FechaVenc,Activo> cada vez que se compra se
+                             // debe verificar si no esta se agrega y se carga activo, si esta se activa
+                             // y cuando se agota un lote una metodo para desactivar  esa fecha de vencimiento
     private int porcentajeVenta;
+    private Proveedor proveedor; // OJO QUE ESTE LO AGREGUE AHORA
+
+
+    public Producto(String nombreProd, String marcaProd, CatProducto categoriaProd, int stock,
+                    double precioDeCompra, int porcentajeVenta, Proveedor proveedor) {
+        this.nombreProd = nombreProd;
+        this.marcaProd = marcaProd;
+        this.categoriaProd = categoriaProd;
+        this.Stock = stock;
+        this.precioDeCompra = precioDeCompra;
+        this.porcentajeVenta = porcentajeVenta;
+        this.precioDeVenta = precioDeCompra * (1 + porcentajeVenta / 100.0);
+        this.proveedor = proveedor;
+    }
+
+
 
     public Producto() {
+    }
+
+
+    public void setIdProd(int idProd) {
+        this.idProd = idProd;
+    }
+
+    public Proveedor getProveedor() {
+        return proveedor;
+    }
+
+    public void setProveedor(Proveedor proveedor) {
+        this.proveedor = proveedor;
     }
 
     public int getIdProd() {
@@ -96,6 +135,9 @@ public abstract class Producto implements Comparable<Producto> {
         return this;
     }
 
+
+
+
     public void vender(int cant){
         if(this.Stock>cant){
             this.Stock -= cant;
@@ -104,45 +146,73 @@ public abstract class Producto implements Comparable<Producto> {
         }
     }
 
-    public void agregar(int cant){
-        this.Stock += cant;
-    }
-
-    public void updatePrecio(int precioNuevo){
+    public void updatePrecio(double precioNuevo){ // Actualiza los dos se necesita tener primero el porcentaje
         this.setPrecioDeCompra(precioNuevo);
-        this.precioDeVenta = precioDeVenta + (precioDeVenta*this.porcentajeVenta);
+        this.precioDeVenta = precioDeCompra + (precioDeCompra*this.porcentajeVenta/100);
     }
 
    public void updatePorcentaje(int nuevoPorcenaje){
         this.setPorcentajeVenta(nuevoPorcenaje);
    }
 
-   /*-------------------------
+   //---------------- a partir de aca ver como convinar ---------
+
+
    // metodo que pregunta los atributos y crea un producto sin id
     // estp es para cargar despues en produtos pero antes de cargarlo verificar que no exista uno con
     // los mismos atributos asi no se duplica (se necesita un metodo en productos)
+
+
     public static Producto cargarProducto(){
-        Producto producto=null;
-        System.out.println("ingresar atributo1: ");
-        producto.setPrecioCompra(1.0);
+        Producto producto= new Producto();
+        producto.setMarcaProd(Mensajes.mensajeReturnString("Ingrese la marca del producto:"));
+        producto.setNombreProd(Mensajes.mensajeReturnString("Ingrese el nombre del producto:"));
+        CatProducto categoria = Mensajes.mensajeReturnEnumConOpciones(CatProducto.class,"Elija una Categoria");
+        producto.setCategoriaProd(categoria);
+
+        String precDeCompraStr = Mensajes.mensajeReturnString("Ingrese el precio de compra:");
+        double precDeCompra = Double.parseDouble(precDeCompraStr); // Convertir a double
+        String porcentajeVentaStr = Mensajes.mensajeReturnString("Ingrese el porcentaje de ganancia:");
+        int porcentajeVenta = Integer.parseInt(porcentajeVentaStr); // Convertir a int
+        producto.setPorcentajeVenta(porcentajeVenta);
+        producto.updatePrecio(precDeCompra); // actualiza el precio de venta
+
+        producto.setFechaVen(Mensajes.mensajeReturnString("Ingrese la fecha de vencimiento (ej. 31/12/2024):"));
         return producto;
+    }
+
+    public int mostrarProducto(){
+        int respuesta = JOptionPane.showConfirmDialog(null,
+                        this.getIdProd() + "\n" +
+                        this.getCategoriaProd() + "\n" +
+                        this.getMarcaProd() + "\n" +
+                        this.getNombreProd() + "\n" +
+                        this.getPrecioDeVenta() + "\n" +
+                        this.getPrecioDeCompra() + "\n"+
+                        this.getStock() + "\n"+
+                        this.getFechaVen(),"Es correcto este Producto?", JOptionPane.YES_NO_OPTION);
+        return respuesta;
     }
 
 
    // metodo para chequear que los atributos de un producto sin tener encuenta el id no sean iguales
-   public boolean mismoProducto(Producto otroProducto){
+
+    public boolean mismoProducto(Producto otroProducto){
        if( // no poner el atributo id entre los que compara
-               this.getPrecioCompra() == otroProducto.getPrecioCompra()&&
-                       this.getPrecioVenta() == otroProducto.getPrecioVenta()
-       ){return true;}
+                  this.getMarcaProd().equals(otroProducto.getMarcaProd())
+               && this.getNombreProd().equals(otroProducto.getNombreProd())
+               // && this.getFechaVen().equals(otroProducto.getFechaVen()) // pensar lo de la fecha de vencimiento
+               && this.getCategoriaProd().equals(otroProducto.getCategoriaProd())
+       )
+       {return true;}
        return false;
    }
 
     // metodo para asignar id, despues de crear el producto y verificar en Productos se aplica este metodo
     // esto evita que se creen productos con los mismos atributos pero distinto id en el inventario
     public void asignarId(){
-        this.id = this.contadorId;
-        this.contadorId++;
+        this.idProd = this.contador;
+        this.contador++;
     }
 
     // probablemente se necesite un metodo para cargar el Proveedor y sea argumento sea Proveedor proveedor;
@@ -150,18 +220,23 @@ public abstract class Producto implements Comparable<Producto> {
 
     // para cambiar los atributos de un producto
     public void modificarProducto(Producto nuevoProducto){
-        this.stock = nuevoProducto.stock;
-        this.precioCompra = nuevoProducto.precioCompra; // y asi con cada atributo
+        this.Stock = nuevoProducto.Stock;
+        this.precioDeCompra = nuevoProducto.precioDeCompra; // y asi con cada atributo
     }
 
     // metodo para chequear que un Producto no tenga atributos nulos
     public boolean noNull(){
-        if(this.stock != null && this.precioCompra != null){return true;}
+ // OJO: BORRE EN ESTA LINEA son int y double no pueden ser nulos los parametros que se estan viendo
         return false;
     }
-}
 
-  --------------------------*/
+
+
+ // cosas nuevas
+
+
+
+//--------------- hasta aca -----------------
 
 
 
@@ -186,16 +261,9 @@ public abstract class Producto implements Comparable<Producto> {
 
     @Override
     public String toString() {
-        return "Producto{" +
-                "idProd=" + idProd +
-                ", nombreProd='" + nombreProd + '\'' +
-                ", marcaProd='" + marcaProd + '\'' +
-                ", categoriaProd=" + categoriaProd +
-                ", Stock=" + Stock +
-                ", precioDeCompra=" + precioDeCompra +
-                ", precioDeVenta=" + precioDeVenta +
-                ", FechaVen='" + FechaVen + '\'' +
-                ", porcentajeVenta=" + porcentajeVenta +
-                '}';
+        return "Producto [idProd=" + idProd + ", nombre=" + nombreProd + ", marca=" + marcaProd +
+                ", categoria=" + categoriaProd + ", stock=" + Stock + ", precioCompra=" + precioDeCompra +
+                ", precioVenta=" + precioDeVenta + ", proveedor=" + proveedor + "]";
     }
+
 }
